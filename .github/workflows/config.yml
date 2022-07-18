@@ -13,13 +13,24 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{matrix.version}}
-      - name: phpize
-        run: phpize
-      - name: configure
-        run: ./configure --enable-apcu-debug
-      - name: make
-        run: make
-      - name: test
+      - name: Build
+        run: |
+            phpize
+            ./configure --enable-apcu-debug
+            make
+      - name: Test
+        run: |
+            make test TESTS="--show-diff -d apc.serializer=default tests"
+            make test TESTS="--show-diff -d apc.serializer=php tests"
+            make test TESTS="--show-diff -d apc.serializer=default -d opcache.enable_cli=1 tests"
+            make test TESTS="--show-diff -d apc.serializer=php -d opcache.enable_cli=1 tests"
+      - name: Build with --disable-apcu-rwlocks
+        run: |
+            phpize --clean
+            phpize
+            ./configure --enable-apcu-debug --disable-apcu-rwlocks
+            make
+      - name: Test
         run: |
             make test TESTS="--show-diff -d apc.serializer=default tests"
             make test TESTS="--show-diff -d apc.serializer=php tests"
